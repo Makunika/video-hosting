@@ -1,34 +1,36 @@
-package com.pshiblo.videohosting.dto;
+package com.pshiblo.videohosting.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.pshiblo.videohosting.models.Video;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 /**
  * @author Максим Пшибло
  */
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class VideoDto {
+public class VideoResponse {
 
     @JsonProperty
-    private int id;
+    private String id;
 
     @JsonProperty
     private String video;
 
-    @JsonProperty
-    private UserDto userDto;
+    @JsonProperty("user")
+    private UserResponse userResponse;
 
     @JsonIgnore
-    public static VideoDto fromVideo(Video video) {
-        return VideoDto.builder()
-                .id(video.getId())
-                .userDto(UserDto.fromUser(video.getUser()))
+    public static VideoResponse fromVideo(Video video) {
+        return VideoResponse.builder()
+                .id(video.getId().toString())
+                .userResponse(UserResponse.fromUser(video.getUser()))
                 .video(video.getVideo())
                 .build();
     }

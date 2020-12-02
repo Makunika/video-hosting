@@ -1,19 +1,21 @@
-package com.pshiblo.videohosting.dto;
+package com.pshiblo.videohosting.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.pshiblo.videohosting.models.User;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 /**
  * @author Максим Пшибло
  */
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserDto {
+public class UserResponse {
 
     @JsonProperty
     private int id;
@@ -24,10 +26,9 @@ public class UserDto {
     @JsonProperty
     private String img;
 
-
     @JsonIgnore
-    public static UserDto fromUser(User user) {
-        return UserDto.builder()
+    public static UserResponse fromUser(User user) {
+        return UserResponse.builder()
                 .id(user.getId())
                 .img(user.getImg())
                 .name(user.getName())

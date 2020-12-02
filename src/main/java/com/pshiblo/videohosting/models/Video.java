@@ -1,12 +1,10 @@
 package com.pshiblo.videohosting.models;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
+import org.hibernate.annotations.Type;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.util.UUID;
 
 /**
  * @author Максим Пшибло
@@ -15,7 +13,15 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "Videos")
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Video extends BaseEntity {
+
+    @Id
+    @GeneratedValue
+    @Type(type="uuid-char")
+    private UUID id;
 
     private String video;
 

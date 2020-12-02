@@ -28,4 +28,8 @@ public class EndPoints {
     public final static String API_ADMIN_VIDEO = "/api/admin/videos";
 
     public final static String API_ADMIN_USER = "/api/admin/users";
+
+    /* FILES */
+
+    public final static String FILE_VIDEO = "/file/videos";
 }

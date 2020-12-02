@@ -1,10 +1,11 @@
 package com.pshiblo.videohosting.models;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.UUID;
 
 /**
  *     id SERIAL PRIMARY KEY,
@@ -19,7 +20,14 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class User extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     private String name;
 
