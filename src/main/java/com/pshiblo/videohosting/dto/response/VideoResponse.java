@@ -23,6 +23,15 @@ public class VideoResponse {
     @JsonProperty
     private String video;
 
+    @JsonProperty
+    private String about;
+
+    @JsonProperty
+    private String name;
+
+    @JsonProperty
+    private String isPrivate;
+
     @JsonProperty("user")
     private UserResponse userResponse;
 
@@ -32,6 +41,8 @@ public class VideoResponse {
                 .id(video.getId().toString())
                 .userResponse(UserResponse.fromUser(video.getUser()))
                 .video(video.getVideo())
+                .about(video.getAbout())
+                .name(video.getName())
                 .build();
     }
 }
