@@ -2,6 +2,7 @@ package com.pshiblo.videohosting.models;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "roles")
 @Data
+@EntityListeners(AuditingEntityListener.class)
 public class Role extends BaseEntity {
 
     @Id

@@ -36,13 +36,11 @@ public class VideoRestController {
             return ResponseJson.error().withErrorMessage("NOT_FOUND_VIDEO").build();
         }
         VideoResponse videoDto = VideoResponse.fromVideo(video);
-        return ResponseJson.success().withValue(videoDto).build();
+        return ResponseJson.success().withValue(videoDto);
     }
 
     @GetMapping
     public Page<VideoResponse> getVideo(Pageable pageable) {
-
-
         Page<Video> videos = videoRepository.findAll(pageable);
         return videos.map(VideoResponse::fromVideo);
     }

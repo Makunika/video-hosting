@@ -13,13 +13,6 @@ public class EndPoints {
 
     public final static String PROFILE = "/profile";
 
-    /* API */
-
-    public final static String API = "/api";
-
-    public final static String API_VIDEO = "/api/videos";
-
-    public final static String API_USER = "/api/users";
 
     /* API ADMIN */
 
@@ -32,4 +25,15 @@ public class EndPoints {
     /* FILES */
 
     public final static String FILE_VIDEO = "/file/videos";
+
+    /* API */
+
+    public final static String API = "/api";
+
+    public final static String API_VIDEO = "/api/videos";
+
+    public final static String API_USER = "/api/users";
+
+    public static final String API_AUTH = "/api/auth";
+    public static final String API_REG = "/api/register";
 }

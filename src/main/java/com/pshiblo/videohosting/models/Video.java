@@ -2,6 +2,7 @@ package com.pshiblo.videohosting.models;
 
 import lombok.*;
 import org.hibernate.annotations.Type;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.util.UUID;
@@ -27,6 +28,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Video extends BaseEntity {
 
     @Id

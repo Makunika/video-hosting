@@ -10,15 +10,17 @@ public class ResponseJson {
         private T value;
         private boolean isSuccess;
         private String errorMessage;
+        private HttpStatus httpStatus;
 
         protected Builder(boolean isSuccess) {
             this.isSuccess = isSuccess;
+            this.httpStatus = HttpStatus.BAD_REQUEST;
             errorMessage = "";
         }
 
-        public Builder<T> withValue(T value) {
+        public ResponseEntity<JsonEntity<T>> withValue(T value) {
             this.value = value;
-            return this;
+            return build();
         }
 
         public Builder<T> withErrorMessage(String errorMessage) {
@@ -26,12 +28,17 @@ public class ResponseJson {
             return this;
         }
 
+        public ResponseEntity<JsonEntity<T>> withHttpStatus(HttpStatus httpStatus) {
+            this.httpStatus = httpStatus;
+            return build();
+        }
+
         public ResponseEntity<JsonEntity<T>> build() {
             if (isSuccess) {
                 return new ResponseEntity<>(new JsonEntity<T>(isSuccess, value, errorMessage), HttpStatus.OK);
             }
             else {
-                return new ResponseEntity<>(new JsonEntity<T>(isSuccess, null, errorMessage), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new JsonEntity<T>(isSuccess, null, errorMessage), httpStatus);
             }
         }
 

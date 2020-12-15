@@ -2,6 +2,7 @@ package com.pshiblo.videohosting.models;
 
 import lombok.*;
 import org.hibernate.annotations.Type;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class User extends BaseEntity {
 
     @Id
@@ -40,6 +42,7 @@ public class User extends BaseEntity {
 
     private String email;
 
+    @Column(insertable = false)
     private String img;
 
     @ManyToMany(fetch = FetchType.EAGER)
