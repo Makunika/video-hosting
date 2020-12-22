@@ -35,5 +35,8 @@ public class EndPoints {
     public final static String API_USER = "/api/users";
 
     public static final String API_AUTH = "/api/auth";
+
     public static final String API_REG = "/api/register";
+
+    public static final String API_RESET = "/api/reset";
 }

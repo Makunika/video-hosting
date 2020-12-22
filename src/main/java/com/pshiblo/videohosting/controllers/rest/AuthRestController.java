@@ -17,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,8 +40,10 @@ public class AuthRestController {
 
 
     @PutMapping("/check")
-    public ResponseEntity loginToken(@AuthenticationPrincipal JwtUser jwtUser) {
-        System.out.println(jwtUser.toString());
+    public ResponseEntity loginToken(final Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "not auth"));
+        }
         return ResponseEntity.ok(Map.of("success", true));
     }
 

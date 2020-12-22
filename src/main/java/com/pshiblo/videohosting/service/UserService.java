@@ -4,10 +4,12 @@ import com.pshiblo.videohosting.models.Role;
 import com.pshiblo.videohosting.models.User;
 import com.pshiblo.videohosting.repository.RoleRepository;
 import com.pshiblo.videohosting.repository.UserRepository;
+import net.bytebuddy.utility.RandomString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,5 +59,15 @@ public class UserService {
 
     public void delete(Integer id) {
         userRepository.deleteById(id);
+    }
+
+    public User generateResetToken(String email) throws IOException {
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            throw new IOException();
+        }
+        String token = RandomString.make(35);
+        user.setToken(token);
+        return userRepository.save(user);
     }
 }
