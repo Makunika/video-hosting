@@ -31,12 +31,12 @@ public class RegisterRestController {
         User userFromDbName = userService.findByName(registerRequest.getUsername());
         User userFromDbEmail = userRepository.findByEmail(registerRequest.getEmail()).orElse(null);
         if (userFromDbName != null || userFromDbEmail != null) {
-            return ResponseJson.error().withErrorMessage("User exist").build();
+            return ResponseJson.error().withErrorMessage("User exist");
         }
 
         User regUser = userService.register(registerRequest.toEntity());
         if (regUser == null) {
-            return ResponseJson.error().withErrorMessage("Error register").build();
+            return ResponseJson.error().withErrorMessage("Error register");
         }
         return ResponseJson.success().withValue(UserResponse.fromUser(regUser));
     }

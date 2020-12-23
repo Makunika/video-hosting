@@ -43,6 +43,12 @@ public class UserService {
         return registeredUser;
     }
 
+    public User setNewPassword(User user, String password) {
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setToken(null);
+        return userRepository.save(user);
+    }
+
     public List<User> getAll() {
         List<User> result = userRepository.findAll();
         return result;

@@ -33,7 +33,7 @@ public class VideoRestController {
     public ResponseEntity<?> getVideo(@PathVariable String id) {
         Video video = videoRepository.findById(UUID.fromString(id)).orElse(null);
         if (video == null) {
-            return ResponseJson.error().withErrorMessage("NOT_FOUND_VIDEO").build();
+            return ResponseJson.error().withErrorMessage("NOT_FOUND_VIDEO");
         }
         VideoResponse videoDto = VideoResponse.fromVideo(video);
         return ResponseJson.success().withValue(videoDto);

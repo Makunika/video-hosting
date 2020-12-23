@@ -23,14 +23,14 @@ public class ResponseJson {
             return build();
         }
 
-        public Builder<T> withErrorMessage(String errorMessage) {
+        public ResponseEntity<JsonEntity<T>> withErrorMessage(String errorMessage) {
             this.errorMessage = errorMessage;
-            return this;
+            return build();
         }
 
-        public ResponseEntity<JsonEntity<T>> withHttpStatus(HttpStatus httpStatus) {
+        public Builder<T> withHttpStatus(HttpStatus httpStatus) {
             this.httpStatus = httpStatus;
-            return build();
+            return this;
         }
 
         public ResponseEntity<JsonEntity<T>> build() {

@@ -12,7 +12,7 @@ public class JsonEntity<T> {
     @JsonProperty
     private T data;
 
-    @JsonProperty(value = "error_message")
+    @JsonProperty(value = "error")
     private String errorMessage;
 
     public JsonEntity(boolean isSuccess, T value, String errorMessage) {
