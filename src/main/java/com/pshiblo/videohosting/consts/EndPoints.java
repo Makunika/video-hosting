@@ -24,7 +24,7 @@ public class EndPoints {
 
     /* FILES */
 
-    public final static String FILE_VIDEO = "/file/videos";
+    public final static String FILE_VIDEO = "/api/file/videos";
 
     /* API */
 
