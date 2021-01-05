@@ -45,6 +45,8 @@ public class Video extends BaseEntity {
     @Column(name = "is_private")
     private Boolean isPrivate;
 
+    private Long views;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

@@ -32,6 +32,12 @@ public class VideoResponse {
     @JsonProperty
     private String isPrivate;
 
+    @JsonProperty
+    private Long createDate;
+
+    @JsonProperty
+    private Long views;
+
     @JsonProperty("user")
     private UserResponse userResponse;
 
@@ -43,6 +49,8 @@ public class VideoResponse {
                 .video(video.getVideo())
                 .about(video.getAbout())
                 .name(video.getName())
+                .createDate(video.getCreated().getTime())
+                .views(video.getViews())
                 .build();
     }
 }

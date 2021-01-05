@@ -1,5 +1,6 @@
 package com.pshiblo.videohosting.controllers;
 
+import com.pshiblo.videohosting.annotations.IsUser;
 import com.pshiblo.videohosting.consts.EndPoints;
 import com.pshiblo.videohosting.dto.response.VideoResponse;
 import com.pshiblo.videohosting.dto.response.http.ResponseJson;
@@ -7,9 +8,12 @@ import com.pshiblo.videohosting.models.User;
 import com.pshiblo.videohosting.models.Video;
 import com.pshiblo.videohosting.repository.UserRepository;
 import com.pshiblo.videohosting.repository.VideoRepository;
+import com.pshiblo.videohosting.security.jwt.JwtUser;
 import net.bytebuddy.utility.RandomString;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +27,6 @@ import java.io.FileOutputStream;
  */
 @Controller
 @RequestMapping(EndPoints.FILE_VIDEO)
-@CrossOrigin(origins = "*", methods = {RequestMethod.POST, RequestMethod.OPTIONS}, allowedHeaders = {"Content-Type", "X-Requested-With", "accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"}, exposedHeaders = {"Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"})
 public class VideoFileController {
 
     private final UserRepository userRepository;
@@ -46,10 +49,10 @@ public class VideoFileController {
     }
 
     @PostMapping
-    public @ResponseBody ResponseEntity newFile(@RequestParam("name") String name,
-                                                 @RequestParam("about") String about,
-                                                 @RequestParam("userId") int id,
-                                                 @RequestParam("file") MultipartFile file){
+    public @ResponseBody ResponseEntity newVideoFile(@RequestParam("name") String name,
+                                                     @RequestParam("about") String about,
+                                                     @RequestParam("userId") int id,
+                                                     @RequestParam("file") MultipartFile file){
         User user = userRepository.findById(id).orElse(null);
         if (user == null) {
             return ResponseJson.error().withErrorMessage("User not exist");

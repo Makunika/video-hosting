@@ -29,6 +29,9 @@ public class UserOwnerResponse {
     @JsonProperty
     private String token;
 
+    @JsonProperty
+    private String email;
+
     @JsonIgnore
     public static UserOwnerResponse fromUser(User user, String token) {
         return UserOwnerResponse.builder()
@@ -36,6 +39,7 @@ public class UserOwnerResponse {
                 .img(user.getImg())
                 .username(user.getName())
                 .token(token)
+                .email(user.getEmail())
                 .build();
     }
 

@@ -39,4 +39,5 @@ public class EndPoints {
     public static final String API_REG = "/api/register";
 
     public static final String API_RESET = "/api/reset";
+    public static final String API_COMMENTS = "/api/comments";
 }
