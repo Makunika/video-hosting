@@ -52,6 +52,7 @@ public class VideoFileController {
     public @ResponseBody ResponseEntity newVideoFile(@RequestParam("name") String name,
                                                      @RequestParam("about") String about,
                                                      @RequestParam("userId") int id,
+                                                     @RequestParam("isPrivate") boolean isPrivate,
                                                      @RequestParam("file") MultipartFile file){
         User user = userRepository.findById(id).orElse(null);
         if (user == null) {
@@ -79,7 +80,7 @@ public class VideoFileController {
                                 .user(user)
                                 .video(strVideoToken + ".mp4")
                                 .about(about)
-                                .isPrivate(false)
+                                .isPrivate(isPrivate)
                                 .name(name)
                                 .build()
                 );

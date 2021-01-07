@@ -3,9 +3,10 @@ package com.pshiblo.videohosting.controllers.rest;
 import com.pshiblo.videohosting.consts.EndPoints;
 import com.pshiblo.videohosting.dto.response.VideoResponse;
 import com.pshiblo.videohosting.dto.response.http.ResponseJson;
-import com.pshiblo.videohosting.models.Role;
+import com.pshiblo.videohosting.models.Mark;
 import com.pshiblo.videohosting.models.User;
 import com.pshiblo.videohosting.models.Video;
+import com.pshiblo.videohosting.repository.MarkRepository;
 import com.pshiblo.videohosting.repository.UserRepository;
 import com.pshiblo.videohosting.repository.VideoRepository;
 import com.pshiblo.videohosting.security.jwt.JwtUser;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 /**
  * @author Максим Пшибло
@@ -28,10 +28,12 @@ public class VideoRestController {
 
     private final VideoRepository videoRepository;
     private final UserRepository userRepository;
+    private final MarkRepository markRepository;
 
-    public VideoRestController(VideoRepository videoRepository, UserRepository userRepository) {
+    public VideoRestController(VideoRepository videoRepository, UserRepository userRepository, MarkRepository markRepository) {
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
+        this.markRepository = markRepository;
     }
 
     @GetMapping("{id}")
@@ -42,6 +44,8 @@ public class VideoRestController {
         }
         video.setViews(video.getViews() + 1);
         videoRepository.save(video);
+
+
         VideoResponse videoDto = VideoResponse.fromVideo(video);
         return ResponseJson.success().withValue(videoDto);
     }
@@ -66,16 +70,20 @@ public class VideoRestController {
 
     @GetMapping
     public Page<VideoResponse> getVideo(Pageable pageable) {
-        Page<Video> videos = videoRepository.findAll(pageable);
+        Page<Video> videos = videoRepository.findByIsPrivate(false, pageable);
         return videos.map(VideoResponse::fromVideo);
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<?> getVideoBuUser(@PathVariable Integer id) {
+    public ResponseEntity<?> getVideoByUser(@PathVariable Integer id) {
         User user = userRepository.findById(id).orElse(null);
         if (user == null)
             return ResponseJson.error().withErrorMessage("User not exist");
         List<Video> videos = videoRepository.findByUser(user);
-        return ResponseJson.success().withValue(videos.stream().map(VideoResponse::fromVideo));
+        return ResponseJson.success().withValue(videos.stream().map(video -> VideoResponse.fromVideo(
+                video,
+                (int)markRepository.countByVideoAndMark(video, Mark.LIKE),
+                (int)markRepository.countByVideoAndMark(video, Mark.DISLIKE)
+        )));
     }
 }

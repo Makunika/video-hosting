@@ -30,13 +30,19 @@ public class VideoResponse {
     private String name;
 
     @JsonProperty
-    private String isPrivate;
-
-    @JsonProperty
     private Long createDate;
 
     @JsonProperty
     private Long views;
+
+    @JsonProperty
+    private int likes;
+
+    @JsonProperty
+    private boolean isPrivate;
+
+    @JsonProperty
+    private int dislikes;
 
     @JsonProperty("user")
     private UserResponse userResponse;
@@ -51,6 +57,25 @@ public class VideoResponse {
                 .name(video.getName())
                 .createDate(video.getCreated().getTime())
                 .views(video.getViews())
+                .dislikes(0)
+                .likes(0)
+                .isPrivate(video.getIsPrivate())
+                .build();
+    }
+
+    @JsonIgnore
+    public static VideoResponse fromVideo(Video video, int likes, int dislikes) {
+        return VideoResponse.builder()
+                .id(video.getId().toString())
+                .userResponse(UserResponse.fromUser(video.getUser()))
+                .video(video.getVideo())
+                .about(video.getAbout())
+                .name(video.getName())
+                .createDate(video.getCreated().getTime())
+                .views(video.getViews())
+                .dislikes(dislikes)
+                .likes(likes)
+                .isPrivate(video.getIsPrivate())
                 .build();
     }
 }

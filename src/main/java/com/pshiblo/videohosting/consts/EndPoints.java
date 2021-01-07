@@ -9,11 +9,6 @@ public class EndPoints {
 
     public final static String HOME = "/";
 
-    public final static String VIDEO = "/v";
-
-    public final static String PROFILE = "/profile";
-
-
     /* API ADMIN */
 
     public final static String API_ADMIN = "/api/admin";
@@ -39,5 +34,8 @@ public class EndPoints {
     public static final String API_REG = "/api/register";
 
     public static final String API_RESET = "/api/reset";
+
     public static final String API_COMMENTS = "/api/comments";
+
+    public static final String API_MARK = "/api/marks";
 }

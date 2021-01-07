@@ -6,7 +6,7 @@ CREATE TABLE videos
     name            varchar(100)        NOT NULL,
     about           text,
     video           varchar(255)        NOT NULL DEFAULT 'default.mp4',
-    is_private         bool                NOT NULL DEFAULT false,
+    is_private      bool                NOT NULL DEFAULT false,
 
 
 
