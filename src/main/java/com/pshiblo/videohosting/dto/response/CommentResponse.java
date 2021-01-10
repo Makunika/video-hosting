@@ -18,6 +18,9 @@ import lombok.NoArgsConstructor;
 public class CommentResponse {
 
     @JsonProperty
+    private Integer id;
+
+    @JsonProperty
     private UserResponse user;
 
     @JsonProperty
@@ -32,6 +35,7 @@ public class CommentResponse {
                 .text(comment.getText())
                 .user(UserResponse.fromUser(comment.getUser()))
                 .createDate(comment.getCreated().getTime())
+                .id(comment.getId())
                 .build();
     }
 }

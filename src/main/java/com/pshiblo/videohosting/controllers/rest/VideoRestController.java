@@ -1,6 +1,7 @@
 package com.pshiblo.videohosting.controllers.rest;
 
 import com.pshiblo.videohosting.consts.EndPoints;
+import com.pshiblo.videohosting.dto.request.EditVideoRequest;
 import com.pshiblo.videohosting.dto.response.VideoResponse;
 import com.pshiblo.videohosting.dto.response.http.ResponseJson;
 import com.pshiblo.videohosting.models.Mark;
@@ -62,15 +63,40 @@ public class VideoRestController {
 
         if (video.getUser().getId().equals(user.getId()) || user.getRoles().stream().anyMatch(role -> role.getName().equals("ROLE_ADMIN"))) {
             videoRepository.delete(video);
-            List<Video> videos = videoRepository.findByUser(user);
-            return ResponseJson.success().withValue(videos.stream().map(VideoResponse::fromVideo));
+            return ResponseJson.success().build();
         }
         return ResponseJson.error().withErrorMessage("Удаление невозможно");
     }
 
+    @PutMapping("{id}")
+    public ResponseEntity<?> editVideo(@PathVariable String id,
+                                         @RequestBody EditVideoRequest request,
+                                         @AuthenticationPrincipal JwtUser jwtUser) {
+        Video video = videoRepository.findById(UUID.fromString(id)).orElse(null);
+        if (video == null) {
+            return ResponseJson.error().withErrorMessage("NOT_FOUND_VIDEO");
+        }
+
+        User user = userRepository.findById(jwtUser.getId()).orElse(null);
+
+        if (video.getUser().getId().equals(user.getId()) || user.getRoles().stream().anyMatch(role -> role.getName().equals("ROLE_ADMIN"))) {
+            video.setName(request.getName());
+            video.setAbout(request.getAbout());
+            video.setIsPrivate(request.isPrivate());
+            videoRepository.save(video);
+            return ResponseJson.success().build();
+        }
+        return ResponseJson.error().withErrorMessage("Изменение невозможно");
+    }
+
     @GetMapping
-    public Page<VideoResponse> getVideo(Pageable pageable) {
-        Page<Video> videos = videoRepository.findByIsPrivate(false, pageable);
+    public Page<VideoResponse> getVideo(Pageable pageable, @RequestParam(required = false) String name) {
+        Page<Video> videos;
+        if (name != null) {
+            videos = videoRepository.findByIsPrivateAndNameContainsIgnoreCase(false, name, pageable);
+        } else {
+            videos = videoRepository.findByIsPrivate(false, pageable);
+        }
         return videos.map(VideoResponse::fromVideo);
     }
 

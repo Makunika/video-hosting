@@ -32,6 +32,9 @@ public class UserOwnerResponse {
     @JsonProperty
     private String email;
 
+    @JsonProperty
+    private boolean isAdmin;
+
     @JsonIgnore
     public static UserOwnerResponse fromUser(User user, String token) {
         return UserOwnerResponse.builder()
@@ -40,6 +43,7 @@ public class UserOwnerResponse {
                 .username(user.getName())
                 .token(token)
                 .email(user.getEmail())
+                .isAdmin(user.getRoles().stream().anyMatch((role -> role.getName().equals("ROLE_ADMIN"))))
                 .build();
     }
 

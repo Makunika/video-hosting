@@ -1,5 +1,6 @@
 package com.pshiblo.videohosting.controllers.rest;
 
+import com.pshiblo.videohosting.annotations.IsAdmin;
 import com.pshiblo.videohosting.consts.EndPoints;
 import com.pshiblo.videohosting.dto.request.CreateCommentRequest;
 import com.pshiblo.videohosting.dto.response.CommentResponse;
@@ -60,5 +61,13 @@ public class CommentsRestController {
                 .video(video)
                 .build();
         return ResponseJson.success().withValue(CommentResponse.fromComment(commentRepository.save(comment)));
+    }
+
+
+    @IsAdmin
+    @DeleteMapping("{id}")
+    public ResponseEntity deleteComment(@PathVariable("id") Integer id) {
+        commentRepository.deleteById(id);
+        return ResponseJson.success().build();
     }
 }
