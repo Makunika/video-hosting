@@ -1,5 +1,6 @@
 package com.pshiblo.videohosting.controllers.rest;
 
+import com.pshiblo.videohosting.annotations.IsUser;
 import com.pshiblo.videohosting.consts.EndPoints;
 import com.pshiblo.videohosting.dto.request.EditVideoRequest;
 import com.pshiblo.videohosting.dto.response.VideoResponse;
@@ -51,6 +52,7 @@ public class VideoRestController {
         return ResponseJson.success().withValue(videoDto);
     }
 
+    @IsUser
     @DeleteMapping("{id}")
     public ResponseEntity<?> deleteVideo(@PathVariable String id,
                                          @AuthenticationPrincipal JwtUser jwtUser) {
@@ -68,6 +70,7 @@ public class VideoRestController {
         return ResponseJson.error().withErrorMessage("Удаление невозможно");
     }
 
+    @IsUser
     @PutMapping("{id}")
     public ResponseEntity<?> editVideo(@PathVariable String id,
                                          @RequestBody EditVideoRequest request,
@@ -82,7 +85,7 @@ public class VideoRestController {
         if (video.getUser().getId().equals(user.getId()) || user.getRoles().stream().anyMatch(role -> role.getName().equals("ROLE_ADMIN"))) {
             video.setName(request.getName());
             video.setAbout(request.getAbout());
-            video.setIsPrivate(request.isPrivate());
+            video.setIsPrivate(request.getIsPrivate());
             videoRepository.save(video);
             return ResponseJson.success().build();
         }

@@ -1,5 +1,6 @@
 package com.pshiblo.videohosting.controllers.rest;
 
+import com.pshiblo.videohosting.annotations.IsUser;
 import com.pshiblo.videohosting.consts.EndPoints;
 import com.pshiblo.videohosting.dto.request.CreateMarkRequest;
 import com.pshiblo.videohosting.dto.response.MarkResponse;
@@ -32,6 +33,7 @@ public class MarkRestController {
         this.markRepository = markRepository;
     }
 
+    @IsUser
     @PostMapping
     public ResponseEntity createOrUpdateMark(@RequestBody CreateMarkRequest request) {
         User user = userRepository.findById(request.getUserId()).orElse(null);

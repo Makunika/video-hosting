@@ -51,7 +51,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(ADMIN_ENDPOINT).hasRole("ADMIN")
                 .antMatchers("/api/auth/check").authenticated()
-                .antMatchers(HttpMethod.PUT, "/api/users").authenticated()
+                .antMatchers("/api/users").authenticated()
                 .antMatchers(HttpMethod.POST, "/api/file/videos").authenticated()
                 .anyRequest().permitAll()
                 .and()

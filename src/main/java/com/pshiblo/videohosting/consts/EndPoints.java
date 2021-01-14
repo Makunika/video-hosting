@@ -9,13 +9,6 @@ public class EndPoints {
 
     public final static String HOME = "/";
 
-    /* API ADMIN */
-
-    public final static String API_ADMIN = "/api/admin";
-
-    public final static String API_ADMIN_VIDEO = "/api/admin/videos";
-
-    public final static String API_ADMIN_USER = "/api/admin/users";
 
     /* FILES */
 

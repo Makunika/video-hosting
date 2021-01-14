@@ -12,8 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties
-public class EditVideoRequest {
-    private String name;
-    private String about;
-    private Boolean isPrivate;
+public class EditUserAdminRequest {
+    private int userId;
+    private Boolean isAdmin;
 }

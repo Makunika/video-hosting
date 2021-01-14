@@ -1,6 +1,7 @@
 package com.pshiblo.videohosting.controllers.rest;
 
 import com.pshiblo.videohosting.annotations.IsAdmin;
+import com.pshiblo.videohosting.annotations.IsUser;
 import com.pshiblo.videohosting.consts.EndPoints;
 import com.pshiblo.videohosting.dto.request.CreateCommentRequest;
 import com.pshiblo.videohosting.dto.response.CommentResponse;
@@ -46,6 +47,7 @@ public class CommentsRestController {
         return ResponseJson.success().withValue(comments.stream().map(CommentResponse::fromComment));
     }
 
+    @IsUser
     @PostMapping
     public ResponseEntity createCommentFroVideo(@RequestBody CreateCommentRequest request) {
         User user = userRepository.findById(request.getUser_id()).orElse(null);
