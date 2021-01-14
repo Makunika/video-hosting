@@ -18,6 +18,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,7 +60,7 @@ public class VideoRestController {
     @IsUser
     @DeleteMapping("{id}")
     public ResponseEntity<?> deleteVideo(@PathVariable String id,
-                                         @AuthenticationPrincipal JwtUser jwtUser) {
+                                         @AuthenticationPrincipal JwtUser jwtUser) throws IOException {
         Video video = videoRepository.findById(UUID.fromString(id)).orElse(null);
         if (video == null) {
             return ResponseJson.error().withErrorMessage("NOT_FOUND_VIDEO");
@@ -64,6 +69,7 @@ public class VideoRestController {
         User user = userRepository.findById(jwtUser.getId()).orElse(null);
 
         if (video.getUser().getId().equals(user.getId()) || user.getRoles().stream().anyMatch(role -> role.getName().equals("ROLE_ADMIN"))) {
+            new File(".files/" + video.getVideo()).delete();
             videoRepository.delete(video);
             return ResponseJson.success().build();
         }

@@ -10,17 +10,29 @@ import com.pshiblo.videohosting.repository.UserRepository;
 import com.pshiblo.videohosting.repository.VideoRepository;
 import com.pshiblo.videohosting.security.jwt.JwtUser;
 import net.bytebuddy.utility.RandomString;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.io.IOUtils;
+import org.apache.tomcat.util.http.fileupload.FileItem;
+import org.apache.tomcat.util.http.fileupload.FileItemIterator;
+import org.apache.tomcat.util.http.fileupload.FileItemStream;
+import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.ServletRequestBindingException;
+import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import java.io.*;
+import java.util.List;
 
 /**
  * @author Максим Пшибло
@@ -49,48 +61,44 @@ public class VideoFileController {
     }
 
     @PostMapping
-    public @ResponseBody ResponseEntity newVideoFile(@RequestParam("name") String name,
-                                                     @RequestParam("about") String about,
-                                                     @RequestParam("userId") int id,
-                                                     @RequestParam("isPrivate") boolean isPrivate,
-                                                     @RequestParam("file") MultipartFile file){
-        User user = userRepository.findById(id).orElse(null);
-        if (user == null) {
-            return ResponseJson.error().withErrorMessage("User not exist");
-        }
-
-        if (!file.isEmpty()) {
-            try {
-                byte[] bytes = file.getBytes();
-                String strVideoToken = RandomString.make(30);
-                File file1 = new File(".files/" + strVideoToken + ".mp4");
-                while(file1.exists()) {
-                    strVideoToken = RandomString.make(30);
-                    file1 = new File(".files/" + strVideoToken + ".mp4");
-                }
-                file1.createNewFile();
-
-                BufferedOutputStream stream =
-                        new BufferedOutputStream(new FileOutputStream(file1));
-                stream.write(bytes);
-                stream.close();
-
-                Video video = videoRepository.save(
-                        Video.builder()
-                                .user(user)
-                                .video(strVideoToken + ".mp4")
-                                .about(about)
-                                .isPrivate(isPrivate)
-                                .name(name)
-                                .build()
-                );
-
-                return ResponseJson.success().withValue(VideoResponse.fromVideo(video));
-            } catch (Exception e) {
-                return ResponseJson.error().withErrorMessage(e.getMessage());
+    public @ResponseBody ResponseEntity newVideoFile(HttpServletRequest request){
+        try {
+            boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+            if (!isMultipart) {
+                return ResponseJson.error().build();
             }
-        } else {
-            return ResponseJson.error().build();
+
+            MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+            InputStream stream = multipartRequest.getFile("file").getInputStream();
+            String strVideoToken = RandomString.make(30);
+            File file = new File(".files/" + strVideoToken + ".mp4");
+            while(file.exists()) {
+                strVideoToken = RandomString.make(30);
+                file = new File(".files/" + strVideoToken + ".mp4");
+            }
+            file.createNewFile();
+            OutputStream out = new FileOutputStream(file);
+            IOUtils.copy(stream, out);
+            stream.close();
+            out.close();
+
+            User user = userRepository.findById(ServletRequestUtils.getRequiredIntParameter(request, "userId")).orElse(null);
+            if (user == null) {
+                return ResponseJson.error().withErrorMessage("User not exist");
+            }
+            Video video = videoRepository.save(
+                    Video.builder()
+                            .name(ServletRequestUtils.getRequiredStringParameter(request, "name"))
+                            .isPrivate(ServletRequestUtils.getRequiredBooleanParameter(request, "isPrivate"))
+                            .about(ServletRequestUtils.getRequiredStringParameter(request, "about"))
+                            .views(0L)
+                            .video(strVideoToken + ".mp4")
+                            .user(user)
+                            .build()
+            );
+            return ResponseJson.success().withValue(VideoResponse.fromVideo(video));
+        } catch (IOException | ServletRequestBindingException e) {
+            return ResponseJson.error().withErrorMessage("При загрузке файла появилась ошибка:" + e.getMessage());
         }
     }
 }
