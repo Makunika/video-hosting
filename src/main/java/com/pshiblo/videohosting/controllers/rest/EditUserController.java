@@ -8,17 +8,17 @@ import com.pshiblo.videohosting.dto.request.EditUserRequest;
 import com.pshiblo.videohosting.dto.response.UserOwnerResponse;
 import com.pshiblo.videohosting.dto.response.UserResponse;
 import com.pshiblo.videohosting.dto.response.http.ResponseJson;
-import com.pshiblo.videohosting.models.Role;
 import com.pshiblo.videohosting.models.User;
 import com.pshiblo.videohosting.repository.RoleRepository;
 import com.pshiblo.videohosting.repository.UserRepository;
+import com.pshiblo.videohosting.repository.VideoRepository;
 import com.pshiblo.videohosting.security.jwt.JwtTokenProvider;
 import com.pshiblo.videohosting.security.jwt.JwtUser;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
+import java.io.File;
 
 
 /**
@@ -31,11 +31,13 @@ public class EditUserController {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RoleRepository roleRepository;
+    private final VideoRepository videoRepository;
 
-    public EditUserController(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, RoleRepository roleRepository) {
+    public EditUserController(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, RoleRepository roleRepository, VideoRepository videoRepository) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.roleRepository = roleRepository;
+        this.videoRepository = videoRepository;
     }
 
     @IsUser
@@ -45,6 +47,11 @@ public class EditUserController {
 
         User user = userRepository.findById(jwtUser.getId()).orElse(null);
         user.setName(request.getUsername());
+        user.setImg(request.getImg());
+        if (userRepository.existsByName(request.getUsername())) {
+            return ResponseJson.error().withErrorMessage("Такой пользователь уже существует");
+        }
+        user = userRepository.save(user);
         String token = jwtTokenProvider.createToken(request.getUsername(), user.getRoles());
 
         UserOwnerResponse response = UserOwnerResponse.fromUser(user, token);
@@ -88,6 +95,11 @@ public class EditUserController {
         if (user == null) {
             return ResponseJson.error().withErrorMessage("Такого пользователя не существует");
         }
+        videoRepository.findByUser(user).forEach(video -> {
+            new File(".files/" + video.getVideo()).delete();
+            videoRepository.delete(video);
+        });
+
         userRepository.delete(user);
         return ResponseJson.success().withValue(UserResponse.fromUser(user));
     }

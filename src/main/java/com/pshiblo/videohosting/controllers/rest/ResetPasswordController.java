@@ -57,7 +57,7 @@ public class ResetPasswordController {
     public ResponseEntity resetPassword(@RequestBody ResetPasswordRequest request) {
         User user = userRepository.findByIdAndToken(request.getId(), request.getToken()).orElse(null);
         if (user == null) {
-            return ResponseJson.error().withErrorMessage("Bad token");
+            return ResponseJson.error().withErrorMessage("Неверный токен авторизации");
         }
         user = userService.setNewPassword(user, request.getNewPassword());
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getName(), request.getNewPassword()));

@@ -39,7 +39,7 @@ public class CommentsRestController {
     public ResponseEntity getCommentsByVideo(@PathVariable String id) {
         Video video = videoRepository.findById(UUID.fromString(id)).orElse(null);
         if (video == null) {
-            return ResponseJson.error().withErrorMessage("NOT_FOUND_VIDEO");
+            return ResponseJson.error().withErrorMessage("Видео не найдено");
         }
 
         List<Comment> comments = commentRepository.findByVideo(video);

@@ -3,9 +3,7 @@
 CREATE TABLE roles
 (
     id              serial              PRIMARY KEY,
-
     name            varchar(100)        NOT NULL UNIQUE,
-
     created         timestamp           NOT NULL DEFAULT NOW(),
     updated         timestamp           NOT NULL DEFAULT NOW()
 );

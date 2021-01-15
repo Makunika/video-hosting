@@ -20,9 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,7 +44,7 @@ public class VideoRestController {
     public ResponseEntity<?> getVideo(@PathVariable String id) {
         Video video = videoRepository.findById(UUID.fromString(id)).orElse(null);
         if (video == null) {
-            return ResponseJson.error().withErrorMessage("NOT_FOUND_VIDEO");
+            return ResponseJson.error().withErrorMessage("Видео не найдено");
         }
         video.setViews(video.getViews() + 1);
         videoRepository.save(video);
@@ -63,7 +60,7 @@ public class VideoRestController {
                                          @AuthenticationPrincipal JwtUser jwtUser) throws IOException {
         Video video = videoRepository.findById(UUID.fromString(id)).orElse(null);
         if (video == null) {
-            return ResponseJson.error().withErrorMessage("NOT_FOUND_VIDEO");
+            return ResponseJson.error().withErrorMessage("Видео не найдено");
         }
 
         User user = userRepository.findById(jwtUser.getId()).orElse(null);
@@ -83,7 +80,7 @@ public class VideoRestController {
                                          @AuthenticationPrincipal JwtUser jwtUser) {
         Video video = videoRepository.findById(UUID.fromString(id)).orElse(null);
         if (video == null) {
-            return ResponseJson.error().withErrorMessage("NOT_FOUND_VIDEO");
+            return ResponseJson.error().withErrorMessage("Видео не найдено");
         }
 
         User user = userRepository.findById(jwtUser.getId()).orElse(null);
@@ -110,11 +107,14 @@ public class VideoRestController {
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<?> getVideoByUser(@PathVariable Integer id) {
+    public ResponseEntity<?> getVideoByUser(@PathVariable Integer id, @AuthenticationPrincipal JwtUser jwtUser) {
         User user = userRepository.findById(id).orElse(null);
         if (user == null)
-            return ResponseJson.error().withErrorMessage("User not exist");
-        List<Video> videos = videoRepository.findByUser(user);
+            return ResponseJson.error().withErrorMessage("Такой пользователь не существует");
+        List<Video> videos =
+                jwtUser != null && jwtUser.getId().equals(user.getId()) ?
+                        videoRepository.findByUser(user) :
+                        videoRepository.findByUserAndIsPrivate(user, false);
         return ResponseJson.success().withValue(videos.stream().map(video -> VideoResponse.fromVideo(
                 video,
                 (int)markRepository.countByVideoAndMark(video, Mark.LIKE),

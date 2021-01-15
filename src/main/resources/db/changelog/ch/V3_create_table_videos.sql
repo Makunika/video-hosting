@@ -7,7 +7,7 @@ CREATE TABLE videos
     about           text,
     video           varchar(255)        NOT NULL DEFAULT 'default.mp4',
     is_private      bool                NOT NULL DEFAULT false,
-
+    views           numeric             NOT NULL DEFAULT 0,
 
 
     user_id         int                 NOT NULL,
@@ -18,3 +18,4 @@ CREATE TABLE videos
         ON UPDATE CASCADE
         ON DELETE CASCADE
 )
+

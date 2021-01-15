@@ -10,29 +10,19 @@ import com.pshiblo.videohosting.repository.UserRepository;
 import com.pshiblo.videohosting.repository.VideoRepository;
 import com.pshiblo.videohosting.security.jwt.JwtUser;
 import net.bytebuddy.utility.RandomString;
-import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.io.IOUtils;
-import org.apache.tomcat.util.http.fileupload.FileItem;
-import org.apache.tomcat.util.http.fileupload.FileItemIterator;
-import org.apache.tomcat.util.http.fileupload.FileItemStream;
-import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.MultiValueMap;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.util.List;
 
 /**
  * @author Максим Пшибло
@@ -60,14 +50,18 @@ public class VideoFileController {
         return new FileSystemResource(file);
     }
 
+    @IsUser
     @PostMapping
-    public @ResponseBody ResponseEntity newVideoFile(HttpServletRequest request){
+    public @ResponseBody ResponseEntity newVideoFile(HttpServletRequest request,
+                                                     @AuthenticationPrincipal JwtUser jwtUser){
         try {
             boolean isMultipart = ServletFileUpload.isMultipartContent(request);
             if (!isMultipart) {
                 return ResponseJson.error().build();
             }
-
+            if (!jwtUser.getId().equals(ServletRequestUtils.getRequiredIntParameter(request, "userId"))) {
+                return ResponseJson.success().withErrorMessage("Неверный токен для данного пользователя");
+            }
             MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
             InputStream stream = multipartRequest.getFile("file").getInputStream();
             String strVideoToken = RandomString.make(30);
@@ -84,7 +78,7 @@ public class VideoFileController {
 
             User user = userRepository.findById(ServletRequestUtils.getRequiredIntParameter(request, "userId")).orElse(null);
             if (user == null) {
-                return ResponseJson.error().withErrorMessage("User not exist");
+                return ResponseJson.error().withErrorMessage("Такого пользвоателя не существует");
             }
             Video video = videoRepository.save(
                     Video.builder()

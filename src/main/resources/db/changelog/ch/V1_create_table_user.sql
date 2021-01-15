@@ -7,7 +7,7 @@ CREATE TABLE users
     password_hash   varchar(255)        NOT NULL,
     token           varchar(255),
     email           varchar(100)        NOT NULL,
-    img             varchar(255)        NOT NULL DEFAULT 'default.png',
+    img             text                NOT NULL DEFAULT 'default.png',
     created         timestamp           NOT NULL DEFAULT NOW(),
     updated         timestamp           NOT NULL DEFAULT NOW()
 )
