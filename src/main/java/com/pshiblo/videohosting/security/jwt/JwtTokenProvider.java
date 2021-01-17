@@ -1,6 +1,8 @@
 package com.pshiblo.videohosting.security.jwt;
 
 import com.pshiblo.videohosting.models.Role;
+import com.pshiblo.videohosting.repository.TokenRepository;
+import com.pshiblo.videohosting.security.JwtUserDetailsService;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,10 +16,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Максим Пшибло
@@ -35,6 +34,7 @@ public class JwtTokenProvider {
     @Autowired
     private UserDetailsService userDetailsService;
 
+
     @PostConstruct
     protected void init() {
         secret = Base64.getEncoder().encodeToString(secret.getBytes());
@@ -44,7 +44,7 @@ public class JwtTokenProvider {
 
         Claims claims = Jwts.claims().setSubject(username);
         claims.put("roles", getRoleNames(roles));
-
+        Jwts.claims();
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
@@ -57,13 +57,19 @@ public class JwtTokenProvider {
     }
 
     public Authentication getAuthentication(String token) {
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(getUsername(token));
-        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+        String username = getUsername(token);
+        UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+
+        if (((JwtUserDetailsService)userDetailsService).checkToken(token, username))
+            return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+        else
+            return null;
     }
 
     public String getUsername(String token) {
         return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody().getSubject();
     }
+
 
     public String resolveToken(HttpServletRequest req) {
         String bearerToken = req.getHeader("Authorization");
@@ -78,6 +84,7 @@ public class JwtTokenProvider {
             Jws<Claims> claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
 
             if (claims.getBody().getExpiration().before(new Date())) {
+                ((JwtUserDetailsService)userDetailsService).deleteToken(token);
                 return false;
             }
 

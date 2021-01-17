@@ -9,14 +9,13 @@ import lombok.Data;
  * @author Максим Пшибло
  */
 @Data
-public class RegisterRequest implements BaseJsonRequest<User> {
+public class RegisterRequest {
     private String username;
     private String email;
     private String password;
 
-    @JsonIgnore
-    @Override
-    public User toEntity(BaseEntity... entities) {
+
+    public User toUser() {
         return User.builder()
                 .email(email)
                 .name(username)

@@ -60,7 +60,7 @@ public class VideoFileController {
                 return ResponseJson.error().build();
             }
             if (!jwtUser.getId().equals(ServletRequestUtils.getRequiredIntParameter(request, "userId"))) {
-                return ResponseJson.success().withErrorMessage("Неверный токен для данного пользователя");
+                return ResponseJson.error().withErrorMessage("Неверный токен для данного пользователя");
             }
             MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
             InputStream stream = multipartRequest.getFile("file").getInputStream();

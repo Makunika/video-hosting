@@ -5,11 +5,6 @@ package com.pshiblo.videohosting.consts;
  */
 public class EndPoints {
 
-    /* HOME */
-
-    public final static String HOME = "/";
-
-
     /* FILES */
 
     public final static String FILE_VIDEO = "/api/file/videos";
@@ -26,9 +21,11 @@ public class EndPoints {
 
     public static final String API_REG = "/api/register";
 
-    public static final String API_RESET = "/api/reset";
+    public static final String API_RESET_PASSWORD = "/api/reset";
 
     public static final String API_COMMENTS = "/api/comments";
 
     public static final String API_MARK = "/api/marks";
+
+    public static final String API_CHANGE_PASSWORD = "/api/change-password";
 }

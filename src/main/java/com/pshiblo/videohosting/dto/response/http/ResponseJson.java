@@ -5,22 +5,14 @@ import org.springframework.http.ResponseEntity;
 
 public class ResponseJson {
 
-    public static class Builder<T> {
+    public static class ErrorBuilder<T> {
 
-        private T value;
-        private boolean isSuccess;
         private String errorMessage;
         private HttpStatus httpStatus;
 
-        protected Builder(boolean isSuccess) {
-            this.isSuccess = isSuccess;
+        protected ErrorBuilder() {
             this.httpStatus = HttpStatus.BAD_REQUEST;
             errorMessage = "";
-        }
-
-        public ResponseEntity<JsonEntity<T>> withValue(T value) {
-            this.value = value;
-            return build();
         }
 
         public ResponseEntity<JsonEntity<T>> withErrorMessage(String errorMessage) {
@@ -28,30 +20,40 @@ public class ResponseJson {
             return build();
         }
 
-        public Builder<T> withHttpStatus(HttpStatus httpStatus) {
+        public ErrorBuilder<T> withHttpStatus(HttpStatus httpStatus) {
             this.httpStatus = httpStatus;
             return this;
         }
 
         public ResponseEntity<JsonEntity<T>> build() {
-            if (isSuccess) {
-                return new ResponseEntity<>(new JsonEntity<T>(isSuccess, value, errorMessage), HttpStatus.OK);
-            }
-            else {
-                return new ResponseEntity<>(new JsonEntity<T>(isSuccess, null, errorMessage), httpStatus);
-            }
+            return new ResponseEntity<>(new JsonEntity<T>(false, null, errorMessage), httpStatus);
+        }
+    }
+
+    public static class SuccessBuilder<T> {
+
+        private T value;
+
+        protected SuccessBuilder() {
         }
 
+        public ResponseEntity<JsonEntity<T>> withValue(T value) {
+            this.value = value;
+            return build();
+        }
 
+        public ResponseEntity<JsonEntity<T>> build() {
+            return new ResponseEntity<>(new JsonEntity<T>(true, value, ""), HttpStatus.OK);
+        }
     }
 
 
-    public static <T> Builder<T> success() {
-        return new Builder<T>(true);
+    public static <T> SuccessBuilder<T> success() {
+        return new SuccessBuilder<T>();
     }
 
-    public static <T> Builder<T> error() {
-        return new Builder<T>(false);
+    public static <T> ErrorBuilder<T> error() {
+        return new ErrorBuilder<T>();
     }
 
 }

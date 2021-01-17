@@ -34,7 +34,7 @@ public class RegisterRestController {
             return ResponseJson.error().withErrorMessage("Такой пользователь уже существует");
         }
 
-        User regUser = userService.register(registerRequest.toEntity());
+        User regUser = userService.register(registerRequest.toUser());
         if (regUser == null) {
             return ResponseJson.error().withErrorMessage("Error register");
         }

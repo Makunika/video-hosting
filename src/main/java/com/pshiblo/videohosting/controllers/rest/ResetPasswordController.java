@@ -14,13 +14,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 /**
  * @author Максим Пшибло
  */
 @RestController
-@RequestMapping(EndPoints.API_RESET)
+@RequestMapping(EndPoints.API_RESET_PASSWORD)
 public class ResetPasswordController {
 
     private final UserService userService;
@@ -45,11 +46,11 @@ public class ResetPasswordController {
             User user = userService.generateResetToken(request.getEmail());
             mailService.send(request.getEmail(),
                     "Восстановление пароля",
-                    "Ссылка для восстановление пароля: http://localhost:3000/reset?token=" + user.getToken() + "&id=" + user.getId());
+                    "Ссылка для восстановление пароля: http://localhost:8080/reset?token=" + user.getToken() + "&id=" + user.getId());
 
             return ResponseJson.success().build();
         } catch (IOException e) {
-            return ResponseJson.error().withErrorMessage("Email not found");
+            return ResponseJson.error().withErrorMessage("Пользователя с такой почтой не существует");
         }
     }
 
@@ -57,11 +58,10 @@ public class ResetPasswordController {
     public ResponseEntity resetPassword(@RequestBody ResetPasswordRequest request) {
         User user = userRepository.findByIdAndToken(request.getId(), request.getToken()).orElse(null);
         if (user == null) {
-            return ResponseJson.error().withErrorMessage("Неверный токен авторизации");
+            return ResponseJson.error().withErrorMessage("Неверный токен восстановления пароля");
         }
-        user = userService.setNewPassword(user, request.getNewPassword());
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getName(), request.getNewPassword()));
-        jwtTokenProvider.createToken(user.getName(), user.getRoles());
+        userService.setNewPassword(user, request.getNewPassword());
+
         return ResponseJson.success().build();
     }
 }

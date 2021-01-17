@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 
 
@@ -43,7 +44,8 @@ public class EditUserController {
     @IsUser
     @PutMapping
     public ResponseEntity editUser(@AuthenticationPrincipal JwtUser jwtUser,
-                                   @RequestBody EditUserRequest request) {
+                                   @RequestBody EditUserRequest request,
+                                   HttpServletRequest servletRequest) {
 
         User user = userRepository.findById(jwtUser.getId()).orElse(null);
         user.setName(request.getUsername());
@@ -52,9 +54,8 @@ public class EditUserController {
             return ResponseJson.error().withErrorMessage("Такой пользователь уже существует");
         }
         user = userRepository.save(user);
-        String token = jwtTokenProvider.createToken(request.getUsername(), user.getRoles());
 
-        UserOwnerResponse response = UserOwnerResponse.fromUser(user, token);
+        UserOwnerResponse response = UserOwnerResponse.fromUser(user, jwtTokenProvider.resolveToken(servletRequest));
         return ResponseJson.success().withValue(response);
     }
 
@@ -66,7 +67,7 @@ public class EditUserController {
         if (user == null) {
             return ResponseJson.error().withErrorMessage("Такого пользователя не существует");
         }
-        if (request.getIsAdmin().booleanValue()) {
+        if (request.getIsAdmin()) {
             if (user.getRoles().stream().noneMatch((role -> role.getName().equals("ROLE_ADMIN")))) {
                 user.getRoles().add(roleRepository.findByName("ROLE_ADMIN"));
                 userRepository.save(user);
