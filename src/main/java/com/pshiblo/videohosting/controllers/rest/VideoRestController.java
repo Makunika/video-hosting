@@ -40,6 +40,9 @@ public class VideoRestController {
         this.markRepository = markRepository;
     }
 
+    /**
+     * Получить видео по id
+     */
     @GetMapping("{id}")
     public ResponseEntity<?> getVideo(@PathVariable String id) {
         Video video = videoRepository.findById(UUID.fromString(id)).orElse(null);
@@ -54,6 +57,42 @@ public class VideoRestController {
         return ResponseJson.success().withValue(videoDto);
     }
 
+    /**
+     * Получить все видео
+     */
+    @GetMapping
+    public Page<VideoResponse> getVideo(Pageable pageable, @RequestParam(required = false) String name) {
+        Page<Video> videos;
+        if (name != null) {
+            videos = videoRepository.findByIsPrivateAndNameContainsIgnoreCase(false, name, pageable);
+        } else {
+            videos = videoRepository.findByIsPrivate(false, pageable);
+        }
+        return videos.map(VideoResponse::fromVideo);
+    }
+
+    /**
+     * Получить видео пользователя
+     */
+    @GetMapping("/user/{id}")
+    public ResponseEntity<?> getVideoByUser(@PathVariable Integer id, @AuthenticationPrincipal JwtUser jwtUser) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null)
+            return ResponseJson.error().withErrorMessage("Такой пользователь не существует");
+        List<Video> videos =
+                jwtUser != null && jwtUser.getId().equals(user.getId()) ?
+                        videoRepository.findByUser(user) :
+                        videoRepository.findByUserAndIsPrivate(user, false);
+        return ResponseJson.success().withValue(videos.stream().map(video -> VideoResponse.fromVideo(
+                video,
+                (int)markRepository.countByVideoAndMark(video, Mark.LIKE),
+                (int)markRepository.countByVideoAndMark(video, Mark.DISLIKE)
+        )));
+    }
+
+    /**
+     * Удалить видео
+     */
     @IsUser
     @DeleteMapping("{id}")
     public ResponseEntity<?> deleteVideo(@PathVariable String id,
@@ -73,6 +112,9 @@ public class VideoRestController {
         return ResponseJson.error().withErrorMessage("Удаление невозможно");
     }
 
+    /**
+     * Изменить видео
+     */
     @IsUser
     @PutMapping("{id}")
     public ResponseEntity<?> editVideo(@PathVariable String id,
@@ -93,32 +135,5 @@ public class VideoRestController {
             return ResponseJson.success().build();
         }
         return ResponseJson.error().withErrorMessage("Изменение невозможно");
-    }
-
-    @GetMapping
-    public Page<VideoResponse> getVideo(Pageable pageable, @RequestParam(required = false) String name) {
-        Page<Video> videos;
-        if (name != null) {
-            videos = videoRepository.findByIsPrivateAndNameContainsIgnoreCase(false, name, pageable);
-        } else {
-            videos = videoRepository.findByIsPrivate(false, pageable);
-        }
-        return videos.map(VideoResponse::fromVideo);
-    }
-
-    @GetMapping("/user/{id}")
-    public ResponseEntity<?> getVideoByUser(@PathVariable Integer id, @AuthenticationPrincipal JwtUser jwtUser) {
-        User user = userRepository.findById(id).orElse(null);
-        if (user == null)
-            return ResponseJson.error().withErrorMessage("Такой пользователь не существует");
-        List<Video> videos =
-                jwtUser != null && jwtUser.getId().equals(user.getId()) ?
-                        videoRepository.findByUser(user) :
-                        videoRepository.findByUserAndIsPrivate(user, false);
-        return ResponseJson.success().withValue(videos.stream().map(video -> VideoResponse.fromVideo(
-                video,
-                (int)markRepository.countByVideoAndMark(video, Mark.LIKE),
-                (int)markRepository.countByVideoAndMark(video, Mark.DISLIKE)
-        )));
     }
 }

@@ -14,6 +14,7 @@ import com.pshiblo.videohosting.repository.UserRepository;
 import com.pshiblo.videohosting.repository.VideoRepository;
 import com.pshiblo.videohosting.security.jwt.JwtTokenProvider;
 import com.pshiblo.videohosting.security.jwt.JwtUser;
+import com.pshiblo.videohosting.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -33,12 +34,14 @@ public class EditUserController {
     private final JwtTokenProvider jwtTokenProvider;
     private final RoleRepository roleRepository;
     private final VideoRepository videoRepository;
+    private final UserService userService;
 
-    public EditUserController(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, RoleRepository roleRepository, VideoRepository videoRepository) {
+    public EditUserController(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, RoleRepository roleRepository, VideoRepository videoRepository, UserService userService) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.roleRepository = roleRepository;
         this.videoRepository = videoRepository;
+        this.userService = userService;
     }
 
     @IsUser
@@ -50,12 +53,16 @@ public class EditUserController {
         User user = userRepository.findById(jwtUser.getId()).orElse(null);
         user.setName(request.getUsername());
         user.setImg(request.getImg());
-        if (userRepository.existsByName(request.getUsername())) {
+        User userFromDb = userRepository.findByName(request.getUsername()).orElse(null);
+        if (userFromDb != null && !userFromDb.getId().equals(user.getId())) {
             return ResponseJson.error().withErrorMessage("Такой пользователь уже существует");
         }
         user = userRepository.save(user);
 
-        UserOwnerResponse response = UserOwnerResponse.fromUser(user, jwtTokenProvider.resolveToken(servletRequest));
+        userService.logout(user, jwtTokenProvider.resolveToken(servletRequest));
+        String token = jwtTokenProvider.createToken(user.getName(), user.getRoles());
+        userService.saveToken(user, token);
+        UserOwnerResponse response = UserOwnerResponse.fromUser(user, token);
         return ResponseJson.success().withValue(response);
     }
 
