@@ -1,7 +1,8 @@
 package com.pshiblo.videohosting.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pshiblo.videohosting.kafka.error.ResendKafkaProducerInterceptor;
+import com.pshiblo.videohosting.kafka.error.RetryKafkaProducerInterceptor;
+import com.pshiblo.videohosting.kafka.error.RetryRecoveryCallback;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -14,19 +15,27 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.*;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.converter.JsonMessageConverter;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.pshiblo.videohosting.kafka.error.ErrorListener.TOPIC_ERROR;
-
 @Configuration
+@EnableRetry
 @EnableKafka
 public class KafkaConfig {
 
@@ -53,7 +62,7 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaUrlServer());
         configProps.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, InetAddress.getLocalHost().getHostName());
         configProps.put(ProducerConfig.TRANSACTION_TIMEOUT_CONFIG, String.valueOf(30000));
-        configProps.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, ResendKafkaProducerInterceptor.class.getName());
+        configProps.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, RetryKafkaProducerInterceptor.class.getName());
         return new DefaultKafkaProducerFactory<>(configProps, new StringSerializer(),
                 new JsonSerializer<>(objectMapper));
     }
@@ -69,17 +78,27 @@ public class KafkaConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
             ConsumerFactory<String, String> consumerFactory, ObjectMapper objectMapper,
-            KafkaTemplate<String, Object> kafkaTemplate,
-            @Value(TOPIC_ERROR) String errorTopic) {
+            KafkaTemplate<String, Object> kafkaTemplate) {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.setMessageConverter(new JsonMessageConverter(objectMapper));
         factory.setConcurrency(4);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD); // Commit record-by-record
-        ResendKafkaErrorHandler resendErrorHandler = new ResendKafkaErrorHandler(kafkaTemplate, errorTopic, objectMapper);
-        factory.setErrorHandler(new DefaultKafkaErrorHandler(resendErrorHandler, kafkaTemplate));
-        factory.getContainerProperties().setEosMode(ContainerProperties.EOSMode.BETA);
+        factory.setRetryTemplate(retryTemplate());
+        factory.setRecoveryCallback(
+                new RetryRecoveryCallback(kafkaTemplate, Duration.ofMinutes(5).toMillis(), objectMapper)
+        );
         return factory;
+    }
+
+    @Bean
+    public RetryTemplate retryTemplate() {
+        RetryTemplate retryTemplate = new RetryTemplate();
+
+        SimpleRetryPolicy simpleRetryPolicy = new SimpleRetryPolicy();
+        simpleRetryPolicy.setMaxAttempts(1);
+        retryTemplate.setRetryPolicy(simpleRetryPolicy);
+        return retryTemplate;
     }
 
     @Bean

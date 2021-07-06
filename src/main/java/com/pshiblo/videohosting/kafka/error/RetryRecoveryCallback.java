@@ -1,15 +1,13 @@
 package com.pshiblo.videohosting.kafka.error;
 
-import com.vltgroup.powercasino.kafka.header.DelayHeader;
-import com.vltgroup.powercasino.kafka.kafkatemplate.RetryingKafkaTemplate;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.header.Header;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.retry.RecoveryCallback;
 import org.springframework.retry.RetryContext;
 
-import java.time.Duration;
 import java.util.Optional;
 
 import static org.springframework.kafka.listener.adapter.RetryingMessageListenerAdapter.CONTEXT_RECORD;
@@ -17,36 +15,36 @@ import static org.springframework.kafka.listener.adapter.RetryingMessageListener
 public class RetryRecoveryCallback implements RecoveryCallback<Object> {
 
   private final KafkaTemplate kafkaTemplate;
-  private final long initMillis;
-  private final long maxMinutes;
+  private final long maxMs;
+  private final ObjectMapper objectMapper;
 
-  public RetryRecoveryCallback(KafkaTemplate kafkaTemplate, long initMillis, long maxMinutes) {
+  public RetryRecoveryCallback(KafkaTemplate kafkaTemplate, long maxMs, ObjectMapper objectMapper) {
     this.kafkaTemplate = kafkaTemplate;
-    this.initMillis = initMillis;
-    this.maxMinutes = maxMinutes;
+    this.maxMs = maxMs;
+    this.objectMapper = objectMapper;
   }
 
   @Override
   public Object recover(RetryContext retryContext) throws Exception {
-    ConsumerRecord record = (ConsumerRecord) retryContext.getAttribute(CONTEXT_RECORD);
+    ConsumerRecord<String, String> record = (ConsumerRecord<String, String>) retryContext.getAttribute(CONTEXT_RECORD);
 
-    Duration timeSleep = Duration.ZERO;
+    if (HeadersUtils.isAllowDelay(record.headers())) {
+      long delay = HeadersUtils.readDelay(record.headers());
 
-    if (record.headers().headers(DelayHeader.KEY).iterator().hasNext()) {
-      Header header = record.headers().headers(DelayHeader.KEY).iterator().next();
-      Duration timeSleepHeader = DelayHeader.getDelay(header.value());
-      if (timeSleepHeader.isZero()) {
-        timeSleep = Duration.ofMillis(initMillis);
-      } else {
-        Thread.sleep(timeSleepHeader.toMillis());
-        timeSleep = Duration.ofSeconds(timeSleepHeader.getSeconds() * timeSleepHeader.getSeconds());
-        if (timeSleep.toMinutes() > maxMinutes) {
-          timeSleep = Duration.ofMinutes(maxMinutes);
-        }
+      Thread.sleep(delay);
+
+      long nextDelay = delay * 2;
+      if (nextDelay > maxMs) {
+        nextDelay = maxMs;
       }
-    }
+      JsonNode jsonNode = objectMapper.readTree(record.value());
 
-    kafkaTemplate.send(record);
+      ProducerRecord producerRecord = new ProducerRecord(record.topic(), record.key(), jsonNode);
+
+      HeadersUtils.setAllowDelay(producerRecord.headers());
+      HeadersUtils.setDelay(producerRecord.headers(), nextDelay);
+      kafkaTemplate.send(producerRecord);
+    }
     return Optional.empty();
   }
 }

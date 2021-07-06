@@ -1,5 +1,6 @@
 package com.pshiblo.videohosting.models;
 
+import com.pshiblo.videohosting.kafka.error.KafkaAllowDelay;
 import lombok.*;
 import org.hibernate.annotations.Type;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;

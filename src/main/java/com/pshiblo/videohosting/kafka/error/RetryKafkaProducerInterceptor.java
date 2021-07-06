@@ -4,15 +4,18 @@ import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
+import java.time.Duration;
 import java.util.Map;
 
-public class ResendKafkaProducerInterceptor implements ProducerInterceptor<String, Object> {
-
+public class RetryKafkaProducerInterceptor implements ProducerInterceptor<String, Object> {
 
     @Override
     public ProducerRecord<String, Object> onSend(ProducerRecord<String, Object> producerRecord) {
         if (producerRecord.value() instanceof KafkaAllowDelay && ((KafkaAllowDelay) producerRecord.value()).isAllowDelay()) {
             HeadersUtils.setAllowDelay(producerRecord.headers());
+            if (!HeadersUtils.containDelay(producerRecord.headers())) {
+                HeadersUtils.setDelay(producerRecord.headers(), 500L);
+            }
         }
         return producerRecord;
     }

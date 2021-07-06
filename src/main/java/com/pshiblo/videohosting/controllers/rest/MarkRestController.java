@@ -2,6 +2,7 @@ package com.pshiblo.videohosting.controllers.rest;
 
 import com.pshiblo.videohosting.annotations.IsUser;
 import com.pshiblo.videohosting.consts.EndPoints;
+import com.pshiblo.videohosting.dto.kafka.UserKafka;
 import com.pshiblo.videohosting.dto.request.CreateMarkRequest;
 import com.pshiblo.videohosting.dto.response.MarkResponse;
 import com.pshiblo.videohosting.dto.response.http.ResponseJson;
@@ -11,7 +12,9 @@ import com.pshiblo.videohosting.models.Video;
 import com.pshiblo.videohosting.repository.MarkRepository;
 import com.pshiblo.videohosting.repository.UserRepository;
 import com.pshiblo.videohosting.repository.VideoRepository;
+import com.pshiblo.videohosting.service.UserCallbackService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -26,11 +29,13 @@ public class MarkRestController {
     private final UserRepository userRepository;
     private final VideoRepository videoRepository;
     private final MarkRepository markRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public MarkRestController(UserRepository userRepository, VideoRepository videoRepository, MarkRepository markRepository) {
+    public MarkRestController(UserRepository userRepository, VideoRepository videoRepository, MarkRepository markRepository, KafkaTemplate<String, Object> kafkaTemplate) {
         this.userRepository = userRepository;
         this.videoRepository = videoRepository;
         this.markRepository = markRepository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     @IsUser
@@ -55,6 +60,7 @@ public class MarkRestController {
                     .build();
         }
         mark = markRepository.save(mark);
+        kafkaTemplate.send(UserCallbackService.KAFKA_TOPIC_USER_CONFIRM, user.getId().toString(), UserKafka.fromUser(user));
         return ResponseJson.success().withValue(MarkResponse.builder()
                 .dislikes((int)markRepository.countByVideoAndMark(video, Mark.DISLIKE))
                 .likes((int)markRepository.countByVideoAndMark(video, Mark.LIKE))

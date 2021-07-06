@@ -2,14 +2,14 @@ package com.pshiblo.videohosting.kafka.error;
 
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
+import org.springframework.messaging.MessageHeaders;
 
 public class HeadersUtils {
     private static final String ALLOW_DELAY = "allow_delay";
-    private static final String ORIGIN_TOPIC = "origin_topic";
-    private static final String DELAY_UNTIL = "delay_until";
-    private static final String ATTEMPTS = "attempts";
+    private static final String DELAY = "delay";
 
     public static void setAllowDelay(Headers headers) {
+        headers.remove(ALLOW_DELAY);
         headers.add(ALLOW_DELAY, "true".getBytes());
     }
 
@@ -18,28 +18,21 @@ public class HeadersUtils {
         return allow != null;
     }
 
-    public static void setOriginTopic(Headers headers, String originTopic) {
-        headers.add(ALLOW_DELAY, originTopic.getBytes());
+    public static void setDelay(Headers headers, long delayMs) {
+        headers.remove(DELAY);
+        headers.add(DELAY, Long.toString(delayMs).getBytes());
     }
 
-    public static String readOriginTopic(Headers headers) {
-        return readHeader(headers, ORIGIN_TOPIC);
+    public static long readDelay(Headers headers) {
+        return Long.parseLong(readHeader(headers, DELAY));
     }
 
-    public static void setDelayUntil(Headers headers, long delayMs) {
-        headers.add(ALLOW_DELAY, Long.toString(System.currentTimeMillis() + delayMs).getBytes());
+    public static long readDelay(MessageHeaders headers) {
+        return Long.parseLong(readHeader(headers, DELAY));
     }
 
-    public static long readDelayUntil(Headers headers) {
-        return Long.parseLong(readHeader(headers, DELAY_UNTIL));
-    }
-
-    public static void setAttempts(Headers headers, int attempts) {
-        headers.add(ALLOW_DELAY, Integer.toString(attempts).getBytes());
-    }
-
-    public static int readAttempts(Headers headers) {
-        return Integer.parseInt(readHeader(headers, ATTEMPTS));
+    public static boolean containDelay(Headers headers) {
+        return readHeader(headers, DELAY) != null;
     }
 
     private static String readHeader(Headers headers, String headerString) {
@@ -48,5 +41,13 @@ public class HeadersUtils {
             return null;
         }
         return new String(header.value());
+    }
+
+    private static String readHeader(MessageHeaders headers, String headerString) {
+        Object header = headers.getOrDefault(headerString, null);
+        if (!(header instanceof String)) {
+            return null;
+        }
+        return (String) header;
     }
 }
